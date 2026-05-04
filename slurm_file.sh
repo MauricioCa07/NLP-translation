@@ -3,8 +3,8 @@
 #SBATCH --job-name="Transformers-Model"
 #SBATCH --partition=accel
 #SBATCH --nodes=1
-#SBATCH --ntasks=59
-#SBATCH --mem=40G
+#SBATCH --ntasks=8
+#SBATCH --mem=10G
 #SBATCH --gres=gpu:1
 #SBATCH --time=1-01:00:00
 #SBATCH --output=logs/%x_%j.out
