@@ -23,19 +23,21 @@ echo "Total number of tasks: $SLURM_NTASKS"
 echo "================================================="
 echo
 
+
 # --- Environment Setup ---
-#module load cuda/12.5
-#module load cudnn-8.1.1.33-11.2-oneapi-2022.0.0-62fa2gf
+module load cuda/12.5
 module load miniconda3/25.5.1
 
 
+source tf/bin/activate    
 
-conda activate venv_nuevo 
-#source venv_nuevo/bin/activate 
 
 
 python train.py
 #python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+#python3 -c "import tensorflow as tf; print(tf.__version__)"
+#python -c "import tensorflow as tf; print('GPU:', tf.config.list_physical_devices('GPU'))"
+
 
 echo
 echo "================================================="
