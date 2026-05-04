@@ -17,7 +17,7 @@ import sys
 import pickle
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.models import Model
 from keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import (
     Input, LSTM, Dense, Embedding, Attention, Concatenate, TimeDistributed
@@ -69,8 +69,7 @@ if not os.path.exists(SAVE_PATH):
 # 2. CARGA DE DATOS Y PREPROCESAMIENTO
 # ==============================================================================
 
-# Añadir tokens especiales al target (Español)
-spanish_texts = ['<start> ' + s + ' <end>' for s in spanish_texts]
+# NOTA: load_data() ya añade <start> y <end>, no duplicar
 
 # Tokenización
 en_tokenizer = Tokenizer(filters='')
@@ -174,10 +173,11 @@ model.fit(
     batch_size=128,
     epochs=50,
     validation_split=0.1,
+    callbacks=[callback],
 )
 
 # Guardar el modelo completo
-model.save(os.path.join(SAVE_PATH, 'nmt_model.h5'))
+model.save(os.path.join(SAVE_PATH, 'nmt_model.keras'))
 print(f"Modelo guardado en: {SAVE_PATH}")
 
 # Guardar tokenizers
@@ -191,46 +191,4 @@ with open(os.path.join(SAVE_PATH, 'tokenizer_es.pkl'), 'wb') as f:
 with open(os.path.join(SAVE_PATH, 'config.pkl'), 'wb') as f:
     pickle.dump({'max_len_en': max_len_en, 'max_len_es': max_len_es}, f)
 
-# ==============================================================================
-# Inferencia
-# ==============================================================================
-
-# Cargar el modelo (simula sesión nueva)
-model = load_model(os.path.join(SAVE_PATH, 'nmt_model.h5'))
-
-with open(os.path.join(SAVE_PATH, 'tokenizer_en.pkl'), 'rb') as f:
-    en_tokenizer = pickle.load(f)
-
-# ==============================================================================
-# 6. INFERENCIA (TRADUCCIÓN DE NUEVOS TEXTOS)
-# ==============================================================================
-
-
-def translate(input_sentence):
-    input_seq = en_tokenizer.texts_to_sequences([input_sentence])
-    input_seq = pad_sequences(input_seq, maxlen=max_len_en, padding='post')
-
-    decoded_sentence = '<start>'
-
-    for i in range(max_len_es):
-        target_seq = es_tokenizer.texts_to_sequences([decoded_sentence])
-        target_seq = pad_sequences(target_seq, maxlen=max_len_es, padding='post')
-
-        output_tokens = model.predict([input_seq, target_seq], verbose=0)
-
-        sampled_token_index = np.argmax(output_tokens[0, i, :])
-        sampled_char = es_tokenizer.index_word.get(sampled_token_index, '')
-
-        if sampled_char == '<end>' or sampled_char == '':
-            break
-
-        decoded_sentence += ' ' + sampled_char
-
-    return decoded_sentence.replace('<start>', '').strip()
-
-
-# --- PRUEBA ---
-texto_a_traducir = "the house is big"
-resultado = translate(texto_a_traducir)
-print(f"\nEnglish: {texto_a_traducir}")
-print(f"Spanish: {resultado}")
+print("Entrenamiento completado. Modelo y artefactos guardados en:", SAVE_PATH)
