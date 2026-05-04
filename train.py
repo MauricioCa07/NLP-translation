@@ -156,7 +156,7 @@ decoder_outputs = decoder_dense(decoder_concat_input)
 
 # Definir modelo de entrenamiento
 
-callback = EarlyStopping(monitor='loss',patience=3)
+callback = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
