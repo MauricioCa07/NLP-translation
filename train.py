@@ -42,7 +42,7 @@ def preprocess_sentence(s):
     return s.strip()
 
 
-def load_data(path, num_samples=60000):
+def load_data(path, num_samples=144000):
     en_sentences = []
     es_sentences = []
     with open(path, 'r', encoding='utf-8') as f:
@@ -56,7 +56,7 @@ def load_data(path, num_samples=60000):
 
 
 # Cargamos 60,000 ejemplos para un equilibrio entre calidad y velocidad
-english_texts, spanish_texts = load_data('spa.txt', num_samples=60000)
+english_texts, spanish_texts = load_data('spa.txt', num_samples=144000)
 
 print(f"Muestra del dataset: {english_texts[100]} -> {spanish_texts[100]}")
 
