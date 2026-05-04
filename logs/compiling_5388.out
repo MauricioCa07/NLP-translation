@@ -1,0 +1,70 @@
+=================================================
+Starting job 5388 on host a3-accel-0
+Job name: compiling
+Partition: accel
+Total number of tasks: 59
+=================================================
+
+The dataframes were loaded correctly
+The features were added correctly 
+Mergeando timeframes...
+
+Entrenando...
+[0]	validation_0-auc:0.78889	validation_1-auc:0.77952
+[200]	validation_0-auc:0.91668	validation_1-auc:0.87426
+[400]	validation_0-auc:0.94125	validation_1-auc:0.87988
+[600]	validation_0-auc:0.95691	validation_1-auc:0.88204
+[800]	validation_0-auc:0.96788	validation_1-auc:0.88253
+[1000]	validation_0-auc:0.97576	validation_1-auc:0.88371
+[1200]	validation_0-auc:0.98153	validation_1-auc:0.88412
+[1242]	validation_0-auc:0.98264	validation_1-auc:0.88407
+
+Mejor iteración: 1167
+
+=======================================================
+RESULTADOS FINALES
+=======================================================
+AUC-ROC:   0.8843 
+Accuracy:  80.14%
+
+Matriz de confusión:
+              Pred Baja   Pred Sube
+  Real Baja        3577        1004
+  Real Sube        1001        4516
+
+features más importantes:
+1h_dist_ema_10       0.055914
+1d_body_pct          0.051363
+4h_body_pct          0.031340
+1h_dist_sma_10       0.030625
+4h_ret_1             0.028438
+1h_dist_sma_20       0.027731
+1d_ret_1             0.026759
+hour                 0.021035
+1h_ret_3             0.019466
+1h_bb_position       0.017704
+1h_mom_10            0.016095
+1h_ret_10            0.015233
+1h_dist_sma_50       0.014859
+4h_ret_2             0.014832
+1d_upper_wick_pct    0.014082
+1h_ret_20            0.013527
+1d_lower_wick_pct    0.012637
+1h_ret_2             0.011844
+1d_ret_2             0.011161
+1h_dist_ema_20       0.010761
+4h_upper_wick_pct    0.010249
+4h_lower_wick_pct    0.009922
+1h_body_pct          0.009918
+1h_stoch_k           0.009585
+1h_ret_5             0.009527
+
+--- Features por timeframe ---
+  1h_  →  importancia total: 0.4151  (41.5%)
+  4h_  →  importancia total: 0.2808  (28.1%)
+  1d_  →  importancia total: 0.2741  (27.4%)
+ohhhhhodsdf
+
+=================================================
+Job finished with exit code 0
+=================================================

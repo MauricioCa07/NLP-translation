@@ -1,0 +1,90 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1777737227.125888  437487 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1777737227.386280  437487 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1777737229.271166  437487 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+[notice] A new release of pip is available: 25.1.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+
+[notice] A new release of pip is available: 25.1.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+W0000 00:00:1777737355.141313  438071 cuda_executor.cc:1755] Failed to determine cuDNN version (Note that this is expected if the application doesn't link the cuDNN plugin): INTERNAL: cuDNN error: CUDNN_STATUS_INTERNAL_ERROR
+W0000 00:00:1777737355.203213  437487 gpu_device.cc:2365] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+Traceback (most recent call last):
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/ops/operation.py", line 317, in from_config
+    return cls(**config)
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/layers/attention/attention.py", line 82, in __init__
+    raise ValueError(
+    ...<3 lines>...
+    )
+ValueError: Invalid value for argument score_mode. Expected one of {'dot', 'concat'}. Received: score_mode=<function dot at 0x7fe033d976a0>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/emcarrillc/GoldPrediction-XGBoost/test.py", line 188, in <module>
+    model = load_model(os.path.join(SAVE_PATH, 'nmt_model.h5'))
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/saving/saving_api.py", line 195, in load_model
+    return legacy_h5_format.load_model_from_hdf5(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        filepath,
+        ^^^^^^^^^
+    ...<2 lines>...
+        safe_mode=safe_mode,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/legacy/saving/legacy_h5_format.py", line 137, in load_model_from_hdf5
+    model = saving_utils.model_from_config(
+        model_config, custom_objects=custom_objects
+    )
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/legacy/saving/saving_utils.py", line 83, in model_from_config
+    return serialization.deserialize_keras_object(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        config,
+        ^^^^^^^
+    ...<2 lines>...
+        printable_module_name="layer",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/legacy/saving/serialization.py", line 492, in deserialize_keras_object
+    deserialized_obj = cls.from_config(
+        cls_config,
+    ...<3 lines>...
+        },
+    )
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/models/model.py", line 827, in from_config
+    return functional_from_config(
+        cls, config, custom_objects=custom_objects
+    )
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/models/functional.py", line 606, in functional_from_config
+    process_layer(layer_data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/models/functional.py", line 569, in process_layer
+    layer = saving_utils.model_from_config(
+        layer_data, custom_objects=custom_objects
+    )
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/legacy/saving/saving_utils.py", line 83, in model_from_config
+    return serialization.deserialize_keras_object(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        config,
+        ^^^^^^^
+    ...<2 lines>...
+        printable_module_name="layer",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/legacy/saving/serialization.py", line 501, in deserialize_keras_object
+    deserialized_obj = cls.from_config(cls_config)
+  File "/home/emcarrillc/GoldPrediction-XGBoost/venv_nuevo/lib/python3.13/site-packages/keras/src/ops/operation.py", line 319, in from_config
+    raise TypeError(
+    ...<2 lines>...
+    )
+TypeError: Error when deserializing class 'Attention' using config={'name': 'Attention_Layer', 'trainable': True, 'dtype': 'float32', 'use_scale': False, 'score_mode': <function dot at 0x7fe033d976a0>, 'dropout': 0.0}.
+
+Exception encountered: Invalid value for argument score_mode. Expected one of {'dot', 'concat'}. Received: score_mode=<function dot at 0x7fe033d976a0>
