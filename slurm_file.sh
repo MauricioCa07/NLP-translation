@@ -34,7 +34,7 @@ conda activate venv_nuevo
 #source venv_nuevo/bin/activate 
 
 
-python test.py
+python train.py
 #python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 
 echo
