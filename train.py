@@ -25,6 +25,8 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import spacy
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+
 
 # ==============================================================================
 # Dataset ENG-SPA
@@ -160,7 +162,12 @@ decoder_outputs = decoder_dense(decoder_concat_input)
 
 callback = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
-
+reduce_lr = ReduceLROnPlateau(
+    monitor='val_loss',                                                                                                                                                                              
+    factor=0.5,        # reduce lr a la mitad
+    patience=2,        # espera 2 epochs sin mejora                                                                                                                                                  
+    min_lr=1e-6        # no bajar de esto
+)   
 
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
@@ -178,7 +185,7 @@ model.fit(
     batch_size=256,
     epochs=50,
     validation_split=0.1,
-    callbacks=[callback],
+    callbacks=[callback,reduce_lr],
 )
 
 # Guardar el modelo completo
