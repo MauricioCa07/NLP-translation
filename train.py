@@ -195,7 +195,7 @@ model.fit(
     [encoder_input_data, decoder_input_data],
     decoder_target_data,
     batch_size=256,
-    epochs=50,
+    epochs=100,
     validation_split=0.1,
     callbacks=[callback,reduce_lr],
 )
