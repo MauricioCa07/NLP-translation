@@ -54,6 +54,12 @@ def load_data(path, num_samples=144000):
         if len(parts) >= 2:
             en_sentences.append(preprocess_sentence(parts[0]))
             es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
+
+    # Mezclar aleatoriamente para evitar sesgo por longitud de frase
+    indices = np.random.permutation(len(en_sentences))
+    en_sentences = [en_sentences[i] for i in indices]
+    es_sentences = [es_sentences[i] for i in indices]
+
     return en_sentences, es_sentences
 
 
