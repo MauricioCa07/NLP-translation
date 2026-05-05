@@ -69,7 +69,6 @@ if not os.path.exists(SAVE_PATH):
 # 2. CARGA DE DATOS Y PREPROCESAMIENTO
 # ==============================================================================
 
-# NOTA: load_data() ya añade <start> y <end>, no duplicar
 
 # Tokenización
 en_tokenizer = Tokenizer(filters='')
