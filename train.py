@@ -118,6 +118,12 @@ def get_embedding_matrix(tokenizer, nlp_model, vocab_size, dim=300):
 en_embedding_matrix = get_embedding_matrix(en_tokenizer, nlp_en, en_vocab_size)
 es_embedding_matrix = get_embedding_matrix(es_tokenizer, nlp_es, es_vocab_size)
 
+# Inicializar tokens especiales con vectores aleatorios (SpaCy les da ceros)
+for token in ['<start>', '<end>']:
+    if token in es_tokenizer.word_index:
+        idx = es_tokenizer.word_index[token]
+        es_embedding_matrix[idx] = np.random.uniform(-0.05, 0.05, 300)
+
 # ==============================================================================
 # 4. DEFINICIÓN DEL MODELO (ENCODER - DECODER + ATTENTION)
 # ==============================================================================
@@ -126,7 +132,7 @@ latent_dim = 300  # Dimensión de las unidades LSTM
 # --- ENCODER ---
 encoder_inputs = Input(shape=(max_len_en,), name="Enc_Input")
 enc_emb = Embedding(
-    en_vocab_size, 300, weights=[en_embedding_matrix], trainable=False
+    en_vocab_size, 300, weights=[en_embedding_matrix], mask_zero=True, trainable=True
 )(encoder_inputs)
 encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, 
                     dropout=0.2, recurrent_dropout=0.2, name="Enc_LSTM")
@@ -136,7 +142,7 @@ encoder_states = [state_h, state_c]
 # --- DECODER ---
 decoder_inputs = Input(shape=(max_len_es,), name="Dec_Input")
 dec_emb_layer = Embedding(
-    es_vocab_size, 300, weights=[es_embedding_matrix], trainable=False
+    es_vocab_size, 300, weights=[es_embedding_matrix], mask_zero=True, trainable=True
 )
 dec_emb = dec_emb_layer(decoder_inputs)
 
