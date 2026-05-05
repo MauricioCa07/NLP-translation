@@ -146,7 +146,7 @@ dec_emb_layer = Embedding(
 )
 
 dec_emb = dec_emb_layer(decoder_inputs)
-enc_emb = Dropout(0.3)(enc_emb)
+dec_emb = Dropout(0.3)(dec_emb)
 decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True,  name="Dec_LSTM")
 decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state=encoder_states)
 
