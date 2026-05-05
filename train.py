@@ -134,8 +134,8 @@ encoder_inputs = Input(shape=(max_len_en,), name="Enc_Input")
 enc_emb = Embedding(
     en_vocab_size, 300, weights=[en_embedding_matrix], mask_zero=True, trainable=True
 )(encoder_inputs)
-encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, 
-                    dropout=0.2, recurrent_dropout=0.2, name="Enc_LSTM")
+enc_emb = Dropout(0.3)(enc_emb)
+encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, name="Enc_LSTM")
 encoder_outputs, state_h, state_c = encoder_lstm(enc_emb)
 encoder_states = [state_h, state_c]
 
@@ -144,10 +144,10 @@ decoder_inputs = Input(shape=(max_len_es,), name="Dec_Input")
 dec_emb_layer = Embedding(
     es_vocab_size, 300, weights=[es_embedding_matrix], mask_zero=True, trainable=True
 )
-dec_emb = dec_emb_layer(decoder_inputs)
 
-decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, 
-                    dropout=0.2, recurrent_dropout=0.2, name="Dec_LSTM")
+dec_emb = dec_emb_layer(decoder_inputs)
+enc_emb = Dropout(0.3)(enc_emb)
+decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True,  name="Dec_LSTM")
 decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state=encoder_states)
 
 # --- MECANISMO DE ATENCIÓN (Luong Style) ---
