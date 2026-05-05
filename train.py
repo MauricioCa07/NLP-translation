@@ -128,8 +128,8 @@ encoder_inputs = Input(shape=(max_len_en,), name="Enc_Input")
 enc_emb = Embedding(
     en_vocab_size, 300, weights=[en_embedding_matrix], trainable=False
 )(encoder_inputs)
-enc_emb = Dropout(0.3)(enc_emb)
-encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, name="Enc_LSTM")
+encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, 
+                    dropout=0.2, recurrent_dropout=0.2, name="Enc_LSTM")
 encoder_outputs, state_h, state_c = encoder_lstm(enc_emb)
 encoder_states = [state_h, state_c]
 
@@ -139,9 +139,9 @@ dec_emb_layer = Embedding(
     es_vocab_size, 300, weights=[es_embedding_matrix], trainable=False
 )
 dec_emb = dec_emb_layer(decoder_inputs)
-dec_emb = Dropout(0.3)(dec_emb)
 
-decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, name="Dec_LSTM")
+decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, 
+                    dropout=0.2, recurrent_dropout=0.2, name="Dec_LSTM")
 decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state=encoder_states)
 
 # --- MECANISMO DE ATENCIÓN (Luong Style) ---
@@ -154,7 +154,7 @@ decoder_concat_input = Concatenate(axis=-1, name="Concat_Layer")(
 )
 
 # Capa densa final
-decoder_concat_input = Dropout(0.3)(decoder_concat_input)
+decoder_concat_input = Dropout(0.5)(decoder_concat_input)
 decoder_dense = TimeDistributed(Dense(es_vocab_size, activation='softmax'))
 decoder_outputs = decoder_dense(decoder_concat_input)
 
@@ -174,7 +174,7 @@ model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
-# ==============================================================================
+# ============================e==================================================
 # 5. ENTRENAMIENTO Y PERSISTENCIA
 # ==============================================================================
 
