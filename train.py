@@ -32,8 +32,8 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 # Dataset ENG-SPA
 # ==============================================================================
 
-subprocess.run(["wget", "-q", "http://www.manythings.org/anki/spa-eng.zip"], check=True)
-subprocess.run(["unzip", "-o", "spa-eng.zip"], check=True)
+#subprocess.run(["wget", "-q", "http://www.manythings.org/anki/spa-eng.zip"], check=True)
+#subprocess.run(["unzip", "-o", "spa-eng.zip"], check=True)
 
 
 def preprocess_sentence(s):
@@ -49,13 +49,14 @@ def load_data(path, num_samples=144000):
     es_sentences = []
     with open(path, 'r', encoding='utf-8') as f:
         lines = f.read().split('\n')
+
     for line in lines[:num_samples]:
-        parts = line.split('\t')
+        parts = line.split('\t') #Split the different columns
         if len(parts) >= 2:
-            en_sentences.append(preprocess_sentence(parts[0]))
+            en_sentences.append(preprocess_sentence(parts[0])) 
             es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
 
-    # Mezclar aleatoriamente para evitar sesgo por longitud de frase
+    # Mix randomly the sentences in the datasets
     indices = np.random.permutation(len(en_sentences))
     en_sentences = [en_sentences[i] for i in indices]
     es_sentences = [es_sentences[i] for i in indices]
@@ -63,7 +64,7 @@ def load_data(path, num_samples=144000):
     return en_sentences, es_sentences
 
 
-# Cargamos 60,000 ejemplos para un equilibrio entre calidad y velocidad
+
 english_texts, spanish_texts = load_data('spa.txt', num_samples=144000)
 
 print(f"Muestra del dataset: {english_texts[100]} -> {spanish_texts[100]}")
@@ -72,6 +73,8 @@ print(f"Muestra del dataset: {english_texts[100]} -> {spanish_texts[100]}")
 SAVE_PATH = './model/'
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
+
+
 
 # ==============================================================================
 # 2. CARGA DE DATOS Y PREPROCESAMIENTO
