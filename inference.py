@@ -54,7 +54,10 @@ def translate(input_sentence):
 
 
 # --- PRUEBA ---
-texto_a_traducir = "A carbon footprint is the amount of carbon dioxide pollution that we produce as a result of our activities. Some people try to reduce their carbon footprint because they are concerned about climate change."
-resultado = translate(texto_a_traducir)
-print(f"\nEnglish: {texto_a_traducir}")
-print(f"Spanish: {resultado}")
+print("--------------------------------")
+while (True): 
+    texto_a_traducir = input()
+    resultado = translate(texto_a_traducir)
+    print(f"\nEnglish: {texto_a_traducir}")
+    print(f"Spanish: {resultado}\n")
+    print("--------------------------------\n")
