@@ -197,9 +197,7 @@ reduce_lr = ReduceLROnPlateau(
 
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(label_smoothing=0.1),
-              metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
 # ============================e==================================================
