@@ -22,6 +22,7 @@ from keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import (
     Input, LSTM, Dense, Embedding, Attention, Concatenate, TimeDistributed,Dropout
 )
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import spacy
@@ -144,8 +145,13 @@ enc_emb = Embedding(
     en_vocab_size, 300, weights=[en_embedding_matrix], mask_zero=True, trainable=True
 )(encoder_inputs)
 enc_emb = Dropout(0.3)(enc_emb)
-encoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, name="Enc_LSTM")
-encoder_outputs, state_h, state_c = encoder_lstm(enc_emb)
+enc_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=False,
+                 kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                 name="Enc_LSTM_1")(enc_emb)
+enc_lstm1 = Dropout(0.3)(enc_lstm1)
+encoder_outputs, state_h, state_c = LSTM(latent_dim, return_sequences=True, return_state=True,
+                                         kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                                         name="Enc_LSTM_2")(enc_lstm1)
 encoder_states = [state_h, state_c]
 
 # --- DECODER ---
@@ -156,8 +162,13 @@ dec_emb_layer = Embedding(
 
 dec_emb = dec_emb_layer(decoder_inputs)
 dec_emb = Dropout(0.3)(dec_emb)
-decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True,  name="Dec_LSTM")
-decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state=encoder_states)
+dec_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=False,
+                 kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                 name="Dec_LSTM_1")(dec_emb, initial_state=encoder_states)
+dec_lstm1 = Dropout(0.3)(dec_lstm1)
+decoder_outputs, _, _ = LSTM(latent_dim, return_sequences=True, return_state=True,
+                             kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                             name="Dec_LSTM_2")(dec_lstm1)
 
 # --- MECANISMO DE ATENCIÓN (Luong Style) ---
 attention_layer = Attention(name="Attention_Layer")
@@ -179,14 +190,16 @@ callback = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=Tr
 
 reduce_lr = ReduceLROnPlateau(
     monitor='val_loss',                                                                                                                                                                              
-    factor=0.5,        # reduce lr a la mitad
-    patience=2,        # espera 2 epochs sin mejora                                                                                                                                                  
-    min_lr=1e-6        # no bajar de esto
+    factor=0.5,        # Reduce Learning Rate to the half
+    patience=2,        # It waits two roudns before reduce the  LR                                                                                                                                            
+    min_lr=1e-6        # No lower than this
 )   
 
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(label_smoothing=0.1),
+              metrics=['accuracy'])
 model.summary()
 
 # ============================e==================================================
