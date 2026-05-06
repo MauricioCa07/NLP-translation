@@ -170,7 +170,7 @@ decoder_outputs, _, _ = LSTM(latent_dim, return_sequences=True, return_state=Tru
                              kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
                              name="Dec_LSTM_2")(dec_lstm1)
 
-# --- MECANISMO DE ATENCIÓN (Luong Style) ---
+# --- MECANISMO DE ATENCIÓN ---
 attention_layer = Attention(name="Attention_Layer")
 attn_out = attention_layer([decoder_outputs, encoder_outputs])
 
@@ -208,9 +208,9 @@ print("\nIniciando entrenamiento...")
 model.fit(
     [encoder_input_data, decoder_input_data],
     decoder_target_data,
-    batch_size=512,
+    batch_size=256,
     epochs=100,
-    validation_split=0.1,
+    validation_split=0.2,
     callbacks=[callback,reduce_lr],
 )
 
