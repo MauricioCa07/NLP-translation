@@ -45,7 +45,7 @@ def preprocess_sentence(s):
     return s.strip()
 
 
-def load_data(path, num_samples=144000):
+def load_data(path, num_samples=2000000):
     en_sentences = []
     es_sentences = []
     with open(path, 'r', encoding='utf-8') as f:
@@ -56,9 +56,22 @@ def load_data(path, num_samples=144000):
         if len(parts) >= 2:
             en_sentences.append(preprocess_sentence(parts[0])) 
             es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
+    
+    with open("second_dataset.txt", "r", encoding='utf-8') as second_dataset:
+        while True:
+            sentence = second_dataset.readline()
+            if not sentence:
+                break
+            parts = sentence.split('\t')
+            if len(parts) >= 2:
+                en_sentences.append(preprocess_sentence(parts[0])) 
+                es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
+
 
     # Mix randomly the sentences in the datasets
     indices = np.random.permutation(len(en_sentences))
+
+    print(len(en_sentences), " ",len(es_sentences))
     en_sentences = [en_sentences[i] for i in indices]
     es_sentences = [es_sentences[i] for i in indices]
 
@@ -66,7 +79,7 @@ def load_data(path, num_samples=144000):
 
 
 
-english_texts, spanish_texts = load_data('spa.txt', num_samples=144000)
+english_texts, spanish_texts = load_data('spa.txt', num_samples=2000000)
 
 print(f"Muestra del dataset: {english_texts[100]} -> {spanish_texts[100]}")
 
@@ -159,7 +172,6 @@ decoder_inputs = Input(shape=(max_len_es,), name="Dec_Input")
 dec_emb_layer = Embedding(
     es_vocab_size, 300, weights=[es_embedding_matrix], mask_zero=True, trainable=True
 )
-
 dec_emb = dec_emb_layer(decoder_inputs)
 dec_emb = Dropout(0.3)(dec_emb)
 dec_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=False,

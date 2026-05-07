@@ -1,9 +1,40 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# Neural Machine Translation ENG to SPA
+# Arquitectura: Encoder-Decoder + Atención + Pre-trained Embeddings (SpaCy)
+# ==============================================================================
+
+# ==============================================================================
+# EJERCICIO ACADÉMICO: MACHINE TRANSLATION (EN -> ES)
+# Arquitectura: Encoder-Decoder + Atención + Pre-trained Embeddings (SpaCy)
+# ==============================================================================
+
+# 1. IMPORTACIÓN DE LIBRERÍAS
 import os
 import re
+import subprocess
+import sys
 import pickle
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.models import Model
+from keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import (
+    Input, LSTM, Dense, Embedding, Attention, Concatenate, TimeDistributed,Dropout
+)
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import spacy
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+
+
+# ==============================================================================
+# Dataset ENG-SPA
+# ==============================================================================
+
+#subprocess.run(["wget", "-q", "http://www.manythings.org/anki/spa-eng.zip"], check=True)
+#subprocess.run(["unzip", "-o", "spa-eng.zip"], check=True)
 
 
 def preprocess_sentence(s):
@@ -13,51 +44,201 @@ def preprocess_sentence(s):
     s = re.sub(r"[^a-zA-Z?.!,¿áéíóúÁÉÍÓÚñÑ]+", " ", s)
     return s.strip()
 
+
+def load_data(path, num_samples=144000):
+    en_sentences = []
+    es_sentences = []
+    with open(path, 'r', encoding='utf-8') as f:
+        lines = f.read().split('\n')
+
+    for line in lines[:num_samples]:
+        parts = line.split('\t') #Split the different columns
+        if len(parts) >= 2:
+            en_sentences.append(preprocess_sentence(parts[0])) 
+            es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
+    
+    with open("second_dataset.txt", "r", encoding='utf-8') as second_dataset:
+        while True:
+            sentence = second_dataset.readline()
+            if not sentence:
+                break
+            parts = line.split('\t')
+            if len(parts) >= 2:
+                en_sentences.append(preprocess_sentence(parts[0])) 
+                es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
+
+
+    # Mix randomly the sentences in the datasets
+    indices = np.random.permutation(len(en_sentences))
+
+    print(len(en_sentences), " ",len(es_sentences))
+    en_sentences = [en_sentences[i] for i in indices]
+    es_sentences = [es_sentences[i] for i in indices]
+
+    return en_sentences, es_sentences
+
+
+
+english_texts, spanish_texts = load_data('spa.txt', num_samples=144000)
+
+print(f"Muestra del dataset: {english_texts[100]} -> {spanish_texts[100]}")
+
+# Configuración de rutas
 SAVE_PATH = './model/'
-
-# Cargar modelo (formato nativo .keras no tiene el bug de score_mode)
-model = tf.keras.models.load_model(os.path.join(SAVE_PATH, 'nmt_model.keras'))
-
-# Cargar tokenizers
-with open(os.path.join(SAVE_PATH, 'tokenizer_en.pkl'), 'rb') as f:
-    en_tokenizer = pickle.load(f)
-with open(os.path.join(SAVE_PATH, 'tokenizer_es.pkl'), 'rb') as f:
-    es_tokenizer = pickle.load(f)
-
-# Cargar configuracion
-with open(os.path.join(SAVE_PATH, 'config.pkl'), 'rb') as f:
-    config = pickle.load(f)
-max_len_en = config['max_len_en']
-max_len_es = config['max_len_es']
+if not os.path.exists(SAVE_PATH):
+    os.makedirs(SAVE_PATH)
 
 
-def translate(input_sentence):
-    input_sentence = preprocess_sentence(input_sentence)
-    input_seq = en_tokenizer.texts_to_sequences([input_sentence])
-    input_seq = pad_sequences(input_seq, maxlen=max_len_en, padding='post')
 
-    decoded_sentence = '<start>'
-
-    for i in range(max_len_es):
-        target_seq = es_tokenizer.texts_to_sequences([decoded_sentence])
-        target_seq = pad_sequences(target_seq, maxlen=max_len_es, padding='post')
-
-        output_tokens = model.predict([input_seq, target_seq], verbose=0)
-        sampled_token_index = np.argmax(output_tokens[0, i, :])
-        sampled_char = es_tokenizer.index_word.get(sampled_token_index, '')
-
-        if sampled_char == '<end>' or sampled_char == '':
-            break
-        decoded_sentence += ' ' + sampled_char
-
-    return decoded_sentence.replace('<start>', '').strip()
+# ==============================================================================
+# 2. CARGA DE DATOS Y PREPROCESAMIENTO
+# ==============================================================================
 
 
-# --- PRUEBA ---
-print("--------------------------------")
-while (True): 
-    texto_a_traducir = input()
-    resultado = translate(texto_a_traducir)
-    print(f"\nEnglish: {texto_a_traducir}")
-    print(f"Spanish: {resultado}\n")
-    print("--------------------------------\n")
+# Tokenización
+en_tokenizer = Tokenizer(filters='')
+en_tokenizer.fit_on_texts(english_texts)
+en_seq = en_tokenizer.texts_to_sequences(english_texts)
+
+es_tokenizer = Tokenizer(filters='')
+es_tokenizer.fit_on_texts(spanish_texts)
+es_seq = es_tokenizer.texts_to_sequences(spanish_texts)
+
+# Calculamos las longitudes máximas reales del dataset cargado
+max_len_en = max(len(s) for s in en_seq)
+max_len_es = max(len(s) for s in es_seq)
+
+encoder_input_data = pad_sequences(en_seq, maxlen=max_len_en, padding='post')
+decoder_input_data = pad_sequences(es_seq, maxlen=max_len_es, padding='post')
+
+# Crear el target desplazado
+decoder_target_data = np.zeros_like(decoder_input_data)
+decoder_target_data[:, :-1] = decoder_input_data[:, 1:]
+
+# Vocabularios
+en_vocab_size = len(en_tokenizer.word_index) + 1
+es_vocab_size = len(es_tokenizer.word_index) + 1
+
+# ==============================================================================
+# 3. EMBEDDINGS PREENTRENADOS CON SPACY
+# ==============================================================================
+
+subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_md"], check=True)
+subprocess.run([sys.executable, "-m", "spacy", "download", "es_core_news_md"], check=True)
+
+nlp_en = spacy.load("en_core_web_md")
+nlp_es = spacy.load("es_core_news_md")
+
+
+def get_embedding_matrix(tokenizer, nlp_model, vocab_size, dim=300):
+    matrix = np.zeros((vocab_size, dim))
+    for word, i in tokenizer.word_index.items():
+        if i < vocab_size:
+            matrix[i] = nlp_model(word).vector
+    return matrix
+
+
+en_embedding_matrix = get_embedding_matrix(en_tokenizer, nlp_en, en_vocab_size)
+es_embedding_matrix = get_embedding_matrix(es_tokenizer, nlp_es, es_vocab_size)
+
+# Inicializar tokens especiales con vectores aleatorios (SpaCy les da ceros)
+for token in ['<start>', '<end>']:
+    if token in es_tokenizer.word_index:
+        idx = es_tokenizer.word_index[token]
+        es_embedding_matrix[idx] = np.random.uniform(-0.05, 0.05, 300)
+
+# ==============================================================================
+# 4. DEFINICIÓN DEL MODELO (ENCODER - DECODER + ATTENTION)
+# ==============================================================================
+latent_dim = 300  # Dimensión de las unidades LSTM
+
+# --- ENCODER ---
+encoder_inputs = Input(shape=(max_len_en,), name="Enc_Input")
+enc_emb = Embedding(
+    en_vocab_size, 300, weights=[en_embedding_matrix], mask_zero=True, trainable=True
+)(encoder_inputs)
+enc_emb = Dropout(0.3)(enc_emb)
+enc_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=False,
+                 kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                 name="Enc_LSTM_1")(enc_emb)
+enc_lstm1 = Dropout(0.3)(enc_lstm1)
+encoder_outputs, state_h, state_c = LSTM(latent_dim, return_sequences=True, return_state=True,
+                                         kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                                         name="Enc_LSTM_2")(enc_lstm1)
+encoder_states = [state_h, state_c]
+
+# --- DECODER ---
+decoder_inputs = Input(shape=(max_len_es,), name="Dec_Input")
+dec_emb_layer = Embedding(
+    es_vocab_size, 300, weights=[es_embedding_matrix], mask_zero=True, trainable=True
+)
+dec_emb = dec_emb_layer(decoder_inputs)
+dec_emb = Dropout(0.3)(dec_emb)
+dec_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=False,
+                 kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                 name="Dec_LSTM_1")(dec_emb, initial_state=encoder_states)
+dec_lstm1 = Dropout(0.3)(dec_lstm1)
+decoder_outputs, _, _ = LSTM(latent_dim, return_sequences=True, return_state=True,
+                             kernel_regularizer=l2(1e-4), recurrent_regularizer=l2(1e-4),
+                             name="Dec_LSTM_2")(dec_lstm1)
+
+# --- MECANISMO DE ATENCIÓN ---
+attention_layer = Attention(name="Attention_Layer")
+attn_out = attention_layer([decoder_outputs, encoder_outputs])
+
+# Concatenamos el contexto de atención con la salida del decoder
+decoder_concat_input = Concatenate(axis=-1, name="Concat_Layer")(
+    [decoder_outputs, attn_out]
+)
+
+# Capa densa final
+decoder_concat_input = Dropout(0.3)(decoder_concat_input)
+decoder_dense = TimeDistributed(Dense(es_vocab_size, activation='softmax'))
+decoder_outputs = decoder_dense(decoder_concat_input)
+
+# Definir modelo de entrenamiento
+
+callback = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+
+reduce_lr = ReduceLROnPlateau(
+    monitor='val_loss',                                                                                                                                                                              
+    factor=0.5,        # Reduce Learning Rate to the half
+    patience=2,        # It waits two roudns before reduce the  LR                                                                                                                                            
+    min_lr=1e-6        # No lower than this
+)   
+
+
+model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+
+# ============================e==================================================
+# 5. ENTRENAMIENTO Y PERSISTENCIA
+# ==============================================================================
+
+print("\nIniciando entrenamiento...")
+model.fit(
+    [encoder_input_data, decoder_input_data],
+    decoder_target_data,
+    batch_size=256,
+    epochs=100,
+    validation_split=0.2,
+    callbacks=[callback,reduce_lr],
+)
+
+# Guardar el modelo completo
+model.save(os.path.join(SAVE_PATH, 'nmt_model.keras'))
+print(f"Modelo guardado en: {SAVE_PATH}")
+
+# Guardar tokenizers
+with open(os.path.join(SAVE_PATH, 'tokenizer_en.pkl'), 'wb') as f:
+    pickle.dump(en_tokenizer, f)
+
+with open(os.path.join(SAVE_PATH, 'tokenizer_es.pkl'), 'wb') as f:
+    pickle.dump(es_tokenizer, f)
+
+# Guardar configuración necesaria para inferencia
+with open(os.path.join(SAVE_PATH, 'config.pkl'), 'wb') as f:
+    pickle.dump({'max_len_en': max_len_en, 'max_len_es': max_len_es}, f)
+
+print("Entrenamiento completado. Modelo y artefactos guardados en:", SAVE_PATH)

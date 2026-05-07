@@ -220,4 +220,8 @@ __marimo__/
 
 model/*
 logs/
-spa-eng.zip
+spa-eng.zip*
+second_dataset.txt
+es-en
+es-en/*
+
