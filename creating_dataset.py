@@ -10,5 +10,5 @@ with open('es-en/europarl-v7.es-en.en', 'r', encoding='utf-8') as file_en, \
         if not line_en or not line_es:
             break
         
-        phrase = line_en.strip() + "   " + line_es.strip() + "\n"
+        phrase = line_en.strip() + "\t" + line_es.strip() + "\n"
         f_out.write(phrase)

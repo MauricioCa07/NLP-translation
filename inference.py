@@ -62,12 +62,13 @@ def load_data(path, num_samples=144000):
             sentence = second_dataset.readline()
             if not sentence:
                 break
-            parts = line.split('\t')
+            parts = sentence.split('\t')
             if len(parts) >= 2:
                 en_sentences.append(preprocess_sentence(parts[0])) 
                 es_sentences.append('<start> ' + preprocess_sentence(parts[1]) + ' <end>')
 
 
+    print(en_sentences[-1]," ",es_sentences[-1])
     # Mix randomly the sentences in the datasets
     indices = np.random.permutation(len(en_sentences))
 
